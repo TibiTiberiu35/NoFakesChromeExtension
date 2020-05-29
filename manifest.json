@@ -1,22 +1,27 @@
 {
+  "manifest_version": 2,
   "name": "NoFakes",
   "description": "This is the way",
-  "version": "0.1.0",
-  "manifest_version": 2,
-  "background": {
-    "persistent": false,
-    "scripts": ["background.js"]
+  "version": "1.0.0",
+  "icons": {
+    "16": "img/icon16.png",
+    "48": "img/icon48.png",
+    "128": "img/icon128.png"
   },
-  "permissions": ["https://*/*", "activeTab", "identity"],
+  "background": {
+    "page": "background.html"
+  },
   "browser_action": {
+    "default_icon": "img/icon128.png",
     "default_popup": "popup.html"
   },
-  "content_security_policy": "script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com https://apis.google.com; object-src 'self'",
-  "oauth2": {
-    "client_id": "515972758324-d5sb64meqd5uhe4pd7ot3e3tja60mimv.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/userinfo.profile"
-    ]
-  }
+  "permissions": ["https://*/*", "activeTab", "tabs", "identity", "storage"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"]
+    }
+  ],
+  "web_accessible_resources": ["img/icon128.png"],
+  "content_security_policy": "script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com; object-src 'self'"
 }
