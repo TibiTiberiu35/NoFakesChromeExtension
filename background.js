@@ -1,27 +1,55 @@
-function getRandomToken() {
-  var randomPool = new Uint8Array(32);
-  crypto.getRandomValues(randomPool);
-  var hex = "";
-  for (var i = 0; i < randomPool.length; ++i) {
-    hex += randomPool[i].toString(16);
-  }
-  // E.g. db18458e2782b2b77e36769c569e263a53885a9944dd0a861e5064eac16f1a
-  return hex;
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyANWvKDDQ8gjuJmaoLUf-EjecrvzycuRFY",
+  authDomain: "nofakes-3372a.firebaseapp.com",
+  databaseURL: "https://nofakes-3372a.firebaseio.com",
+  projectId: "nofakes-3372a",
+  storageBucket: "nofakes-3372a.appspot.com",
+  messagingSenderId: "441762572863",
+  appId: "1:441762572863:web:23262cad770296e9d2268a",
+  measurementId: "G-M6BXP45F3Q",
+};
 
-chrome.storage.sync.get("userid", function (items) {
-  var userid = items.userid;
-  if (userid) {
-    useToken(userid);
-  } else {
-    userid = getRandomToken();
-    chrome.storage.sync.set({ userid: userid }, function () {
-      useToken(userid);
-    });
-  }
-  function useToken(userid) {
-    console.log(userid);
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+window.dbData = {
+  urls: [{ count: 0, url: "" }],
+};
+var urlData = { count: 0 };
+let sessionUrls = [];
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.command == "get") {
+    db.ref().on(
+      "value",
+      (data) => (window.dbData = data.val()),
+      (err) => console.log(err)
+    );
+
+    // for (let i = 0; i < window.dbData.urls.length; i++) {
+    //   if (window.dbData.urls[i].url == url) {
+    //     urlData.count = window.dbData.urls[i].count;
+    //   }
+    // }
+  } else if (msg.command == "send") {
+    let url = msg.data.url;
+
+    if (!sessionUrls.includes(url)) {
+      let found = false;
+
+      for (let i = 0; i < window.dbData.urls.length; i++) {
+        if (window.dbData.urls[i].url == url) {
+          let newCount = ++window.dbData.urls[i].count;
+          db.ref("urls/" + i + "/count/").set(newCount);
+          found = true;
+        }
+      }
+
+      if (found == false) {
+        db.ref("urls/" + window.dbData.urls.length).set({ count: 1, url: url });
+      }
+
+      sessionUrls.push(url);
+    }
   }
 });
-
-chrome.runtime.sendMessage({ userid: "hello" });

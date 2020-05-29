@@ -1,18 +1,26 @@
 const btn1 = document.getElementById("btn1");
 const carrier = document.getElementById("carrier");
-let data = { url: "", vote: false };
+
+window.onload = function () {
+  chrome.runtime.sendMessage({
+    command: "get",
+  });
+  // chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+
+  // });
+  let bgpage = chrome.extension.getBackgroundPage();
+  let dbData = bgpage.dbData;
+  console.log(dbData);
+};
 
 function sendMessage(e) {
-  if (!data.vote) {
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-      chrome.runtime.sendMessage({
-        command: "getSend",
-        data: { url: tabs[0].url },
-      });
+  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+    chrome.runtime.sendMessage({
+      command: "send",
+      data: { url: tabs[0].url },
     });
-    data.vote = true;
-    displayCount();
-  }
+    btn1.disabled = true;
+  });
 }
 
 function displayCount() {
