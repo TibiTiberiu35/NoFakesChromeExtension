@@ -15,7 +15,6 @@ const db = firebase.database();
 window.dbData = {
   urls: [{ count: 0, url: "" }],
 };
-var urlData = { count: 0 };
 let sessionUrls = [];
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -25,12 +24,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       (data) => (window.dbData = data.val()),
       (err) => console.log(err)
     );
-
-    // for (let i = 0; i < window.dbData.urls.length; i++) {
-    //   if (window.dbData.urls[i].url == url) {
-    //     urlData.count = window.dbData.urls[i].count;
-    //   }
-    // }
   } else if (msg.command == "send") {
     let url = msg.data.url;
 

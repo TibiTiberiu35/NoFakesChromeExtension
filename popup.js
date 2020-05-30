@@ -5,12 +5,7 @@ window.onload = function () {
   chrome.runtime.sendMessage({
     command: "get",
   });
-  // chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-
-  // });
-  let bgpage = chrome.extension.getBackgroundPage();
-  let dbData = bgpage.dbData;
-  console.log(dbData);
+  getCount();
 };
 
 function sendMessage(e) {
@@ -21,10 +16,28 @@ function sendMessage(e) {
     });
     btn1.disabled = true;
   });
+  getCount();
 }
 
-function displayCount() {
-  document.getElementById("carrier").innerHTML = 1;
+function getCount() {
+  setTimeout(function () {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      let bgpage = chrome.extension.getBackgroundPage();
+      for (let i = 0; i < bgpage.dbData.urls.length; i++) {
+        if (bgpage.dbData.urls[i].url == tabs[0].url) {
+          displayCount(bgpage.dbData.urls[i].count);
+        }
+      }
+    });
+  }, 200);
+}
+
+function displayCount(count) {
+  if (isNaN(count)) {
+    document.getElementById("carrier").innerHTML = 0;
+  } else {
+    document.getElementById("carrier").innerHTML = count;
+  }
 }
 
 btn1.addEventListener("click", sendMessage);
