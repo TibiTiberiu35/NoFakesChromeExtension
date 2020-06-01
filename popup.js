@@ -1,20 +1,16 @@
-const btn1 = document.getElementById("btn1");
+const reportButton = document.getElementById("btn1");
 const carrier = document.getElementById("carrier");
+let bgpage;
 
 window.onload = function () {
-  chrome.runtime.sendMessage({
-    command: "get",
-  });
+  getDBData();
   getCount();
 };
 
-function sendMessage(e) {
+function sendMessage() {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-    chrome.runtime.sendMessage({
-      command: "send",
-      data: { url: tabs[0].url },
-    });
-    btn1.disabled = true;
+    sendReportToDB(tabs[0].url);
+    reportButton.disabled = true;
   });
   getCount();
 }
@@ -22,22 +18,38 @@ function sendMessage(e) {
 function getCount() {
   setTimeout(function () {
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-      let bgpage = chrome.extension.getBackgroundPage();
-      for (let i = 0; i < bgpage.dbData.urls.length; i++) {
-        if (bgpage.dbData.urls[i].url == tabs[0].url) {
-          displayCount(bgpage.dbData.urls[i].count);
-        }
-      }
+      bgpage = chrome.extension.getBackgroundPage();
+      let count = getUrlCount(tabs[0].url);
+      displayCount(count);
     });
-  }, 200);
+  }, 400);
+}
+
+function getUrlCount(activeTabUrl) {
+  let urlElems = bgpage.dbData.urls;
+  for (let i = 0; i < urlElems.length; i++) {
+    if (urlElems[i].url == activeTabUrl) {
+      return urlElems[i].count;
+    }
+  }
+  return 0;
 }
 
 function displayCount(count) {
-  if (isNaN(count)) {
-    document.getElementById("carrier").innerHTML = 0;
-  } else {
-    document.getElementById("carrier").innerHTML = count;
-  }
+  document.getElementById("carrier").innerHTML = count;
+}
+
+function getDBData() {
+  chrome.runtime.sendMessage({
+    command: "get",
+  });
+}
+
+function sendReportToDB(url) {
+  chrome.runtime.sendMessage({
+    command: "send",
+    data: { url },
+  });
 }
 
 btn1.addEventListener("click", sendMessage);
