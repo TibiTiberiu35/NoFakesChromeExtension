@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "NoFakes",
-  "description": "This is the way",
+  "description": "NoFakes warns you about the accuracy of a site by the reports it received.",
   "version": "1.0.1",
   "icons": {
     "16": "img/icon16.png",

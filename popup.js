@@ -1,9 +1,16 @@
 const reportButton = document.getElementById("btn1");
 const carrier = document.getElementById("carrier");
+const modal = document.querySelector("#alert-modal");
 let bgpage;
 
 window.onload = function () {
   getCount();
+  setTimeout(function () {
+    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
+      let count = getUrlCount(tabs[0].url);
+      if (count > 100) openModal(modal);
+    });
+  }, 0);
 };
 
 function sendMessage() {
