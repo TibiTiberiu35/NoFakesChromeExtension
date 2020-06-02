@@ -19,39 +19,49 @@ let sessionUrls = [];
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.command == "get") {
-    db.ref().on(
-      "value",
-      (data) => (window.dbData = data.val()),
-      (err) => console.log(err)
-    );
+    getData();
   } else if (msg.command == "send") {
     let url = msg.data.url;
 
     if (!sessionUrls.includes(url)) {
-      let found = false;
-
-      for (let i = 0; i < window.dbData.urls.length; i++) {
-        if (window.dbData.urls[i].url == url) {
-          let newCount = ++window.dbData.urls[i].count;
-          db.ref("urls/" + i + "/count/").set(newCount);
-          found = true;
-        }
-      }
-
-      if (found == false) {
-        db.ref("urls/" + window.dbData.urls.length).set({ count: 1, url: url });
-      }
-
+      setData(url);
       sessionUrls.push(url);
     }
   }
 });
 
-// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-//   console.log(
-//     sender.tab
-//       ? "from a content script:" + sender.tab.url
-//       : "from the extension"
-//   );
-//   if (request.greeting == "hello") sendResponse({ farewell: "goodbye" });
-// });
+chrome.runtime.onInstalled.addListener(() => {
+  getData();
+});
+
+function getData() {
+  db.ref().on("value", gotData, gotError);
+}
+
+function gotData(data) {
+  window.dbData = data.val();
+}
+
+function gotError(err) {
+  console.log(err);
+}
+
+function setData(activeTabUrl) {
+  let urlsElems = window.dbData.urls;
+  for (let i = 0; i < urlsElems.length; i++) {
+    if (urlsElems[i].url == activeTabUrl) {
+      incrementExistentReportInstance(urlsElems[i].count, i);
+      return;
+    }
+  }
+
+  createNewReportInstance(activeTabUrl, urlsElems.length);
+}
+
+function incrementExistentReportInstance(count, index) {
+  db.ref("urls/" + index + "/count/").set(++count);
+}
+
+function createNewReportInstance(url, index) {
+  db.ref("urls/" + index).set({ count: 1, url });
+}

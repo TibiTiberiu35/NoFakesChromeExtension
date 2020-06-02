@@ -3,13 +3,12 @@ const carrier = document.getElementById("carrier");
 let bgpage;
 
 window.onload = function () {
-  getDBData();
   getCount();
 };
 
 function sendMessage() {
   chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-    sendReportToDB(tabs[0].url);
+    sendReport(tabs[0].url);
     reportButton.disabled = true;
   });
   getCount();
@@ -22,7 +21,7 @@ function getCount() {
       let count = getUrlCount(tabs[0].url);
       displayCount(count);
     });
-  }, 400);
+  }, 0);
 }
 
 function getUrlCount(activeTabUrl) {
@@ -39,13 +38,7 @@ function displayCount(count) {
   document.getElementById("carrier").innerHTML = count;
 }
 
-function getDBData() {
-  chrome.runtime.sendMessage({
-    command: "get",
-  });
-}
-
-function sendReportToDB(url) {
+function sendReport(url) {
   chrome.runtime.sendMessage({
     command: "send",
     data: { url },
