@@ -10,7 +10,7 @@ window.onload = function () {
       let count = getUrlCount(tabs[0].url);
       if (count > 100) openModal(modal);
     });
-  }, 0);
+  }, 200);
 };
 
 function sendMessage() {
@@ -28,7 +28,7 @@ function getCount() {
       let count = getUrlCount(tabs[0].url);
       displayCount(count);
     });
-  }, 0);
+  }, 200);
 }
 
 function getUrlCount(activeTabUrl) {
