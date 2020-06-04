@@ -11,57 +11,84 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-const db = firebase.database();
-window.dbData = {
+let dbData = {
   urls: [{ count: 0, url: "" }],
 };
+let activeTabUrl = "";
 let sessionUrls = [];
-
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg.command == "get") {
-    getData();
-  } else if (msg.command == "send") {
-    let url = msg.data.url;
-
-    if (!sessionUrls.includes(url)) {
-      setData(url);
-      sessionUrls.push(url);
-    }
-  }
-});
+let urlIndex = null;
+window.count = 0;
 
 chrome.runtime.onInstalled.addListener(() => {
   getData();
 });
 
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.command === "getActiveTabUrl") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (arrayOfTabs) => {
+      activeTabUrl = arrayOfTabs[0].url;
+      setUrlIndex(activeTabUrl);
+    });
+    sendResponse();
+  } else if (msg.command === "getActiveTabCount") {
+    window.count = urlIndex !== null ? dbData.urls[urlIndex].count : 0;
+    sendResponse();
+  } else if (msg.command === "sendReport") {
+    if (wasAlreadyBeenReportedByUser(activeTabUrl)) {
+      setData(activeTabUrl);
+      sessionUrls.push(activeTabUrl);
+      window.count++;
+    }
+    sendResponse({ newCount: window.count });
+  }
+});
+
 function getData() {
-  db.ref().on("value", gotData, gotError);
+  firebase.database().ref().on("value", gotData, gotError);
 }
 
 function gotData(data) {
-  window.dbData = data.val();
+  dbData = data.val();
 }
 
 function gotError(err) {
   console.log(err);
 }
 
-function setData(activeTabUrl) {
-  let urlsElems = window.dbData.urls;
-  for (let i = 0; i < urlsElems.length; i++) {
-    if (urlsElems[i].url == activeTabUrl) {
-      incrementExistentReportInstance(urlsElems[i].count, i);
-      return;
-    }
-  }
-
-  createNewReportInstance(activeTabUrl, urlsElems.length);
+function setUrlIndex(url) {
+  urlIndex = getUrlIndex(url);
 }
 
-function incrementExistentReportInstance(count, index) {
-  db.ref("urls/" + index + "/count/").set(++count);
+function getUrlIndex(url) {
+  let urlsElems = dbData.urls;
+  for (let i = 0; i < urlsElems.length; i++) {
+    if (urlsElems[i].url === url) return i;
+  }
+  return null;
+}
+
+function wasAlreadyBeenReportedByUser(url) {
+  return !sessionUrls.includes(url);
+}
+
+function setData(activeTabUrl) {
+  if (urlIndex === null) {
+    createNewReportInstance(activeTabUrl, dbData.urls.length);
+    return;
+  }
+  incrementExistentReportInstance(window.count, urlIndex);
 }
 
 function createNewReportInstance(url, index) {
-  db.ref("urls/" + index).set({ count: 1, url });
+  firebase
+    .database()
+    .ref("urls/" + index)
+    .set({ count: 1, url });
+}
+
+function incrementExistentReportInstance(count, index) {
+  firebase
+    .database()
+    .ref("urls/" + index + "/count/")
+    .set(++count);
 }

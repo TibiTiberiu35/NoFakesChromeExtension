@@ -1,55 +1,35 @@
-const reportButton = document.getElementById("btn1");
+const reportButton = document.getElementById("reportButton");
 const carrier = document.getElementById("carrier");
 const modal = document.querySelector("#alert-modal");
 let bgpage;
 
 window.onload = function () {
-  getCount();
-  setTimeout(function () {
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-      let count = getUrlCount(tabs[0].url);
-      if (count > 100) openModal(modal);
+  chrome.runtime.sendMessage({ command: "getActiveTabUrl" }, () => {
+    chrome.runtime.sendMessage({ command: "getActiveTabCount" }, () => {
+      getBackgroundPage();
+      displayCount(bgpage.count);
+      showWarningAlertModal(bgpage.count);
     });
-  }, 200);
+  });
 };
 
 function sendMessage() {
-  chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-    sendReport(tabs[0].url);
+  chrome.runtime.sendMessage({ command: "sendReport" }, (response) => {
     reportButton.disabled = true;
+    displayCount(response.newCount);
   });
-  getCount();
 }
 
-function getCount() {
-  setTimeout(function () {
-    chrome.tabs.query({ active: true, lastFocusedWindow: true }, (tabs) => {
-      bgpage = chrome.extension.getBackgroundPage();
-      let count = getUrlCount(tabs[0].url);
-      displayCount(count);
-    });
-  }, 200);
-}
-
-function getUrlCount(activeTabUrl) {
-  let urlElems = bgpage.dbData.urls;
-  for (let i = 0; i < urlElems.length; i++) {
-    if (urlElems[i].url == activeTabUrl) {
-      return urlElems[i].count;
-    }
-  }
-  return 0;
+function getBackgroundPage() {
+  bgpage = chrome.extension.getBackgroundPage();
 }
 
 function displayCount(count) {
   document.getElementById("carrier").innerHTML = count;
 }
 
-function sendReport(url) {
-  chrome.runtime.sendMessage({
-    command: "send",
-    data: { url },
-  });
+function showWarningAlertModal(count) {
+  if (count > 100) openModal(modal);
 }
 
-btn1.addEventListener("click", sendMessage);
+reportButton.addEventListener("click", sendMessage);

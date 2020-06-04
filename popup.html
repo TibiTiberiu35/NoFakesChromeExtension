@@ -17,12 +17,16 @@
     <div class="modal-header">
       <h1 class="logo">
         <img class="logo-icon" src="./img/icon128.png" />NoFakes
-        <span class="version">(1.1.1)</span>
+        <span class="version">(1.1.2)</span>
       </h1>
     </div>
     <div class="modal-content">
       <div class="container"></div>
-      <button class="btn" id="btn1" data-modal-target="#thank-you-modal">
+      <button
+        class="btn"
+        id="reportButton"
+        data-modal-target="#thank-you-modal"
+      >
         Report
       </button>
     </div>
@@ -35,7 +39,7 @@
         <a
           href="https://nofakes.netlify.app"
           class="btn"
-          id="btn2"
+          id="visitPageButton"
           target="_blank"
           >Visit our page</a
         >
@@ -55,6 +59,6 @@
     </div>
     <div id="overlay"></div>
     <script defer src="popup.js"></script>
-    <script defer src="dom.js"></script>
+    <script defer src="modals.js"></script>
   </body>
 </html>
