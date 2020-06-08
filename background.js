@@ -15,12 +15,13 @@ let dbData = {
   urls: [{ count: 0, url: "" }],
 };
 let activeTabUrl = "";
-let sessionUrls = [];
 let urlIndex = null;
+let userReportedUrls = [];
 window.count = 0;
 
 chrome.runtime.onInstalled.addListener(() => {
   getData();
+  getUserReportedUrls();
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -34,9 +35,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     window.count = urlIndex !== null ? dbData.urls[urlIndex].count : 0;
     sendResponse();
   } else if (msg.command === "sendReport") {
-    if (wasAlreadyBeenReportedByUser(activeTabUrl)) {
-      setData(activeTabUrl);
-      sessionUrls.push(activeTabUrl);
+    if (wasAlreadyReportedByUser(activeTabUrl)) {
+      setDataToDatabase(activeTabUrl);
+      addReportedUrl(activeTabUrl);
       window.count++;
     }
     sendResponse({ newCount: window.count });
@@ -55,6 +56,12 @@ function gotError(err) {
   console.log(err);
 }
 
+function getUserReportedUrls() {
+  chrome.storage.sync.get(["userReportedUrls"], (result) => {
+    userReportedUrls = result.userReportedUrls ? result.userReportedUrls : [];
+  });
+}
+
 function setUrlIndex(url) {
   urlIndex = getUrlIndex(url);
 }
@@ -67,11 +74,11 @@ function getUrlIndex(url) {
   return null;
 }
 
-function wasAlreadyBeenReportedByUser(url) {
-  return !sessionUrls.includes(url);
+function wasAlreadyReportedByUser(url) {
+  return !userReportedUrls.includes(url);
 }
 
-function setData(activeTabUrl) {
+function setDataToDatabase(activeTabUrl) {
   if (urlIndex === null) {
     createNewReportInstance(activeTabUrl, dbData.urls.length);
     return;
@@ -91,4 +98,11 @@ function incrementExistentReportInstance(count, index) {
     .database()
     .ref("urls/" + index + "/count/")
     .set(++count);
+}
+
+function addReportedUrl(url) {
+  userReportedUrls.push(url);
+  chrome.storage.sync.set({
+    userReportedUrls: userReportedUrls,
+  });
 }
